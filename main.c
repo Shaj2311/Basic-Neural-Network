@@ -103,6 +103,33 @@ int main()
 		}
 
 		//output layer
+		double OUTPUT_RESULT[NUM_OUTPUTS];
+		//for each output neuron,
+		for(int i = 0; i < NUM_OUTPUTS; i++)
+		{
+			double result = 0.f;
+			//for each hidden neuron,
+			for(int j = 0; j < NUM_HIDDEN; j++)
+			{
+				//get input (from hidden neuron)
+				double inputValue = HIDDEN_RESULT[j];
+
+				//apply weight
+				inputValue *= OUTPUT_WEIGHTS[j][i];
+
+				//add to result
+				result += inputValue;
+			}
+
+			//apply output neuron bias
+			result += OUTPUT_BIASES[i];
+
+			//apply activation to introduce non-linearity
+			result = sigmoid(result);
+
+			//store final result
+			OUTPUT_RESULT[i] = result;
+		}
 
 		//loss calculation
 
