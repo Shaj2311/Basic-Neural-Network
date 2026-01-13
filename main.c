@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 #define EPOCHS 1000
-#define NUM_INPUTS 1
-#define NUM_HIDDEN 2
+#define NUM_INPUTS 4
+#define NUM_HIDDEN 4
 #define NUM_OUTPUTS 3
 
 
@@ -17,7 +17,7 @@ double getRand()
 //sigmoid and sigmoid derivative
 double sigmoid(double x)
 {
-	return 1 + (1 + exp(-x));
+	return 1 / (1 + exp(-x));
 }
 double dSigmoid(double x)
 {
@@ -36,13 +36,19 @@ int main()
 	double OUTPUT_WEIGHTS[NUM_HIDDEN][NUM_OUTPUTS];
 
 	//training data
-	double TRAINING_INPUTS[4] = {0, 90, 180, 270};
+	//0, 90, 180, 270
+	double TRAINING_INPUTS[4][NUM_INPUTS] = {
+		{1, 0, 0, 0},
+		{0, 1, 0, 0},
+		{0, 0, 1, 0},
+		{0, 0, 0, 1}
+	};
 	//0, 1, -1
 	double TRAINING_OUTPUTS[4][3] = {
 		{1, 0, 0},
-		{0,1,0},
+		{0, 1, 0},
 		{1, 0, 0},
-		{1, 0, -1}
+		{0, 0, 1}
 	};
 
 	//initialize weights and biases
@@ -64,14 +70,45 @@ int main()
 	}
 
 	//one epoch for now
-	//forward pass
-	//hidden layer
-	//output layer
 
-	//loss calculation
+	//for each input,
+	for(int input = 0; input < 4; input++)
+	{
+		//forward pass
+		//hidden layer
+		double HIDDEN_RESULT[NUM_HIDDEN]; //values computed by hidden layer neurons
+		//for each hidden neuron,
+		for(int i = 0; i < NUM_HIDDEN; i++)
+		{
+			//for each input neuron,
+			double result = 0.f;
+			for(int j = 0; j < NUM_INPUTS; j++)
+			{
+				//get input
+				double inputValue = TRAINING_INPUTS[input][j];
+				//apply weight
+				inputValue *= HIDDEN_WEIGHTS[j][i];
+				//add to result
+				result += inputValue;
+			}
 
-	//back propagation
-	//output layer
-	//hidden layer
+			//apply hidden neuron bias
+			result += HIDDEN_BIASES[i];
+
+			//apply activation to introduce non-linearity
+			result = sigmoid(result);
+
+			//store final output
+			HIDDEN_RESULT[i] = result;
+		}
+
+		//output layer
+
+		//loss calculation
+
+		//back propagation
+		//output layer
+		//hidden layer
+	}
 	return 0;
 }
