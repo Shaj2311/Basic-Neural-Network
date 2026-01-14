@@ -132,6 +132,18 @@ int main()
 		}
 
 		//loss calculation
+		double totalLoss;
+		//for each output neuron,
+		for(int i = 0; i < NUM_OUTPUTS; i++)
+		{
+			//Mean Squared Error (multiplied by 0.5 for simpler derivative)
+			double loss = 0.5 *
+				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
+				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]);
+
+			//accumulate loss
+			totalLoss += loss;
+		}
 
 		//back propagation
 		//output layer
