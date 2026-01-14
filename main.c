@@ -1,4 +1,5 @@
 //basic neural network that predicts sin() of quadrantal angles
+#include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
@@ -70,160 +71,165 @@ int main()
 		}
 	}
 
-	//one epoch for now
-
-	//for each input,
-	for(int input = 0; input < 4; input++)
+	//epoch loop
+	for(int epoch = 0; epoch < EPOCHS; epoch++)
 	{
-		//forward pass
-		//hidden layer
-		double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
-		double HIDDEN_RESULT[NUM_HIDDEN]; //values computed by hidden layer neurons
-		//for each hidden neuron,
-		for(int i = 0; i < NUM_HIDDEN; i++)
+		//for each input,
+		for(int input = 0; input < 4; input++)
 		{
-			//for each input neuron,
-			double result = 0.f;
-			for(int j = 0; j < NUM_INPUTS; j++)
+			//printf("Input: %f %f %f %f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1], TRAINING_INPUTS[input][2], TRAINING_INPUTS[input][3]);
+			//forward pass
+			//hidden layer
+			double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
+			double HIDDEN_RESULT[NUM_HIDDEN]; //values computed by hidden layer neurons
+							  //for each hidden neuron,
+			for(int i = 0; i < NUM_HIDDEN; i++)
 			{
-				//get input
-				double inputValue = TRAINING_INPUTS[input][j];
-				//apply weight
-				inputValue *= HIDDEN_WEIGHTS[j][i];
-				//add to result
-				result += inputValue;
+				//for each input neuron,
+				double result = 0.f;
+				for(int j = 0; j < NUM_INPUTS; j++)
+				{
+					//get input
+					double inputValue = TRAINING_INPUTS[input][j];
+					//apply weight
+					inputValue *= HIDDEN_WEIGHTS[j][i];
+					//add to result
+					result += inputValue;
+				}
+
+				//apply hidden neuron bias
+				result += HIDDEN_BIASES[i];
+
+				//store hidden neuron input
+				HIDDEN_INPUTS[i] = result;
+
+				//apply activation to introduce non-linearity
+				result = sigmoid(result);
+
+				//store final output
+				HIDDEN_RESULT[i] = result;
 			}
 
-			//apply hidden neuron bias
-			result += HIDDEN_BIASES[i];
-
-			//store hidden neuron input
-			HIDDEN_INPUTS[i] = result;
-
-			//apply activation to introduce non-linearity
-			result = sigmoid(result);
-
-			//store final output
-			HIDDEN_RESULT[i] = result;
-		}
-
-		//output layer
-		double OUTPUT_INPUTS[NUM_OUTPUTS];
-		double OUTPUT_RESULT[NUM_OUTPUTS];
-		//for each output neuron,
-		for(int i = 0; i < NUM_OUTPUTS; i++)
-		{
-			double result = 0.f;
-			//for each hidden neuron,
-			for(int j = 0; j < NUM_HIDDEN; j++)
-			{
-				//get input (from hidden neuron)
-				double inputValue = HIDDEN_RESULT[j];
-
-				//apply weight
-				inputValue *= OUTPUT_WEIGHTS[j][i];
-
-				//add to result
-				result += inputValue;
-			}
-
-			//apply output neuron bias
-			result += OUTPUT_BIASES[i];
-
-			//store output neuron input
-			OUTPUT_INPUTS[i] = result;
-
-			//apply activation to introduce non-linearity
-			result = sigmoid(result);
-
-			//store final result
-			OUTPUT_RESULT[i] = result;
-		}
-
-		//loss calculation
-		double totalLoss;
-		double OUTPUT_LOSS[NUM_OUTPUTS];
-		//for each output neuron,
-		for(int i = 0; i < NUM_OUTPUTS; i++)
-		{
-			//Mean Squared Error (multiplied by 0.5 for simpler derivative)
-			double loss = 0.5 *
-				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
-				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]);
-
-			//store loss
-			OUTPUT_LOSS[i] = loss;
-
-			//accumulate total loss
-			totalLoss += loss;
-		}
-
-		//back propagation
-
-		//output error
-
-		//bias -= (learning rate)(change required)
-		double OUTPUT_ERRORS[NUM_OUTPUTS];
-		//for each output neuron,
-		for(int i = 0; i < NUM_OUTPUTS; i++)
-		{
-			//change required = partial d(loss)/d(input)
-			// =
-			//partial d(loss)/d(output) *
-			//partial d(output)/d(input)
-			// =
-			//(network output - expected output) *
-			// sigmoid_derivative(neuron input)
-			double error =
-				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
-				dSigmoid(OUTPUT_INPUTS[i]);
-
-			//store error
-			OUTPUT_ERRORS[i] = error;
-		}
-
-		//hidden error
-		double HIDDEN_ERRORS[NUM_HIDDEN];
-		//for each hidden neuron,
-		for(int i = 0; i < NUM_HIDDEN; i++)
-		{
-			double error = 0.f;
+			//output layer
+			double OUTPUT_INPUTS[NUM_OUTPUTS];
+			double OUTPUT_RESULT[NUM_OUTPUTS];
 			//for each output neuron,
-			for(int j = 0; j < NUM_OUTPUTS; j++)
+			for(int i = 0; i < NUM_OUTPUTS; i++)
 			{
-				error += OUTPUT_ERRORS[j] * OUTPUT_WEIGHTS[i][j];
+				double result = 0.f;
+				//for each hidden neuron,
+				for(int j = 0; j < NUM_HIDDEN; j++)
+				{
+					//get input (from hidden neuron)
+					double inputValue = HIDDEN_RESULT[j];
+
+					//apply weight
+					inputValue *= OUTPUT_WEIGHTS[j][i];
+
+					//add to result
+					result += inputValue;
+				}
+
+				//apply output neuron bias
+				result += OUTPUT_BIASES[i];
+
+				//store output neuron input
+				OUTPUT_INPUTS[i] = result;
+
+				//apply activation to introduce non-linearity
+				result = sigmoid(result);
+
+				//store final result
+				OUTPUT_RESULT[i] = result;
 			}
-			error *= dSigmoid(HIDDEN_INPUTS[i]);
+			//printf("Output: %f %f %f\n", OUTPUT_RESULT[0], OUTPUT_RESULT[1], OUTPUT_RESULT[2]);
 
-			//store error
-			HIDDEN_ERRORS[i] = error;
-		}
-
-		//apply correction
-		//output layer
-		for(int i = 0; i < NUM_OUTPUTS; i++)
-		{
-			//adjust biases
-			OUTPUT_BIASES[i] -= LEARNING_RATE * OUTPUT_ERRORS[i];
-			//adjust weights
-			for(int j = 0; j < NUM_HIDDEN; j++)
+			//loss calculation
+			double totalLoss;
+			double OUTPUT_LOSS[NUM_OUTPUTS];
+			//for each output neuron,
+			for(int i = 0; i < NUM_OUTPUTS; i++)
 			{
-				OUTPUT_WEIGHTS[j][i] -= LEARNING_RATE * (OUTPUT_ERRORS[i] * OUTPUT_WEIGHTS[j][i]);
-			}
-		}
+				//Mean Squared Error (multiplied by 0.5 for simpler derivative)
+				double loss = 0.5 *
+					(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
+					(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]);
 
-		//hidden layer
-		for(int i = 0; i < NUM_HIDDEN; i++)
-		{
-			//adjust biases
-			HIDDEN_BIASES[i] -= LEARNING_RATE * HIDDEN_ERRORS[i];
-			//adjust weights
-			for(int j = 0; j < NUM_INPUTS; j++)
+				//store loss
+				OUTPUT_LOSS[i] = loss;
+
+				//accumulate total loss
+				totalLoss += loss;
+			}
+			printf("Epoch: %d\tTotal loss: %f\n", epoch, totalLoss);
+
+			//back propagation
+
+			//output error
+
+			//bias -= (learning rate)(change required)
+			double OUTPUT_ERRORS[NUM_OUTPUTS];
+			//for each output neuron,
+			for(int i = 0; i < NUM_OUTPUTS; i++)
 			{
-				HIDDEN_WEIGHTS[j][i] -= LEARNING_RATE * (HIDDEN_ERRORS[i] * HIDDEN_WEIGHTS[j][i]);
-			}
-		}
+				//change required = partial d(loss)/d(input)
+				// =
+				//partial d(loss)/d(output) *
+				//partial d(output)/d(input)
+				// =
+				//(network output - expected output) *
+				// sigmoid_derivative(neuron input)
+				double error =
+					(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
+					dSigmoid(OUTPUT_INPUTS[i]);
 
+				//store error
+				OUTPUT_ERRORS[i] = error;
+			}
+
+			//hidden error
+			double HIDDEN_ERRORS[NUM_HIDDEN];
+			//for each hidden neuron,
+			for(int i = 0; i < NUM_HIDDEN; i++)
+			{
+				double error = 0.f;
+				//for each output neuron,
+				for(int j = 0; j < NUM_OUTPUTS; j++)
+				{
+					error += OUTPUT_ERRORS[j] * OUTPUT_WEIGHTS[i][j];
+				}
+				error *= dSigmoid(HIDDEN_INPUTS[i]);
+
+				//store error
+				HIDDEN_ERRORS[i] = error;
+			}
+
+			//apply correction
+			//output layer
+			for(int i = 0; i < NUM_OUTPUTS; i++)
+			{
+				//adjust biases
+				OUTPUT_BIASES[i] -= LEARNING_RATE * OUTPUT_ERRORS[i];
+				//adjust weights
+				for(int j = 0; j < NUM_HIDDEN; j++)
+				{
+					OUTPUT_WEIGHTS[j][i] -= LEARNING_RATE * (OUTPUT_ERRORS[i] * OUTPUT_WEIGHTS[j][i]);
+				}
+			}
+
+			//hidden layer
+			for(int i = 0; i < NUM_HIDDEN; i++)
+			{
+				//adjust biases
+				HIDDEN_BIASES[i] -= LEARNING_RATE * HIDDEN_ERRORS[i];
+				//adjust weights
+				for(int j = 0; j < NUM_INPUTS; j++)
+				{
+					HIDDEN_WEIGHTS[j][i] -= LEARNING_RATE * (HIDDEN_ERRORS[i] * HIDDEN_WEIGHTS[j][i]);
+				}
+			}
+
+		}
 	}
 	return 0;
 }
