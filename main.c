@@ -13,7 +13,8 @@
 //get a random value between 0 and 1
 double getRand()
 {
-	return (double)rand() / (RAND_MAX + 1.0);
+	double random = (double)rand() / (RAND_MAX + 1.0);
+	return (random * 2) - 1;
 }
 
 //sigmoid and sigmoid derivative
