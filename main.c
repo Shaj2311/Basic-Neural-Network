@@ -1,13 +1,13 @@
-//basic neural network that predicts sin() of quadrantal angles
+//basic neural network that predicts xor
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#define EPOCHS 1000
+#define EPOCHS 10000
 #define LEARNING_RATE 0.1
-#define NUM_INPUTS 4
-#define NUM_HIDDEN 4
-#define NUM_OUTPUTS 3
+#define NUM_INPUTS 2
+#define NUM_HIDDEN 2
+#define NUM_OUTPUTS 1
 
 
 //get a random value between 0 and 1
@@ -38,19 +38,17 @@ int main()
 	double OUTPUT_WEIGHTS[NUM_HIDDEN][NUM_OUTPUTS];
 
 	//training data
-	//0, 90, 180, 270
 	double TRAINING_INPUTS[4][NUM_INPUTS] = {
-		{1, 0, 0, 0},
-		{0, 1, 0, 0},
-		{0, 0, 1, 0},
-		{0, 0, 0, 1}
+		{0, 0},
+		{0, 1},
+		{1, 0},
+		{1, 1}
 	};
-	//0, 1, -1
-	double TRAINING_OUTPUTS[4][3] = {
-		{1, 0, 0},
-		{0, 1, 0},
-		{1, 0, 0},
-		{0, 0, 1}
+	double TRAINING_OUTPUTS[4][1] = {
+		{0},
+		{1},
+		{1},
+		{0}
 	};
 
 	//initialize weights and biases
@@ -77,7 +75,8 @@ int main()
 		//for each input,
 		for(int input = 0; input < 4; input++)
 		{
-			//printf("Input: %f %f %f %f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1], TRAINING_INPUTS[input][2], TRAINING_INPUTS[input][3]);
+			if(epoch % 1000 == 0)
+				printf("Input: %.0f %.0f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1]);
 			//forward pass
 			//hidden layer
 			double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
@@ -142,10 +141,14 @@ int main()
 				//store final result
 				OUTPUT_RESULT[i] = result;
 			}
-			//printf("Output: %f %f %f\n", OUTPUT_RESULT[0], OUTPUT_RESULT[1], OUTPUT_RESULT[2]);
+			if(epoch % 1000 == 0)
+			{
+				printf("Output: %.3f\n", OUTPUT_RESULT[0]);
+				printf("Expected: %.0f\n", TRAINING_OUTPUTS[input][0]);
+			}
 
 			//loss calculation
-			double totalLoss;
+			double totalLoss = 0.f;
 			double OUTPUT_LOSS[NUM_OUTPUTS];
 			//for each output neuron,
 			for(int i = 0; i < NUM_OUTPUTS; i++)
@@ -161,7 +164,8 @@ int main()
 				//accumulate total loss
 				totalLoss += loss;
 			}
-			printf("Epoch: %d\tTotal loss: %f\n", epoch, totalLoss);
+			if(epoch % 1000 == 0)
+				printf("Epoch: %d\tTotal loss: %f\n\n", epoch, totalLoss);
 
 			//back propagation
 
@@ -213,7 +217,7 @@ int main()
 				//adjust weights
 				for(int j = 0; j < NUM_HIDDEN; j++)
 				{
-					OUTPUT_WEIGHTS[j][i] -= LEARNING_RATE * (OUTPUT_ERRORS[i] * OUTPUT_WEIGHTS[j][i]);
+					OUTPUT_WEIGHTS[j][i] -= LEARNING_RATE * (OUTPUT_ERRORS[i] * HIDDEN_RESULT[j]);
 				}
 			}
 
@@ -225,7 +229,7 @@ int main()
 				//adjust weights
 				for(int j = 0; j < NUM_INPUTS; j++)
 				{
-					HIDDEN_WEIGHTS[j][i] -= LEARNING_RATE * (HIDDEN_ERRORS[i] * HIDDEN_WEIGHTS[j][i]);
+					HIDDEN_WEIGHTS[j][i] -= LEARNING_RATE * (HIDDEN_ERRORS[i] * TRAINING_INPUTS[input][j]);
 				}
 			}
 
