@@ -1,5 +1,5 @@
-# Basic-Neural-Network
-A simple neural network that predicts XOR (most of the time :) ), written in C
+# XOR Neural Network
+A simple neural network that predicts XOR (most of the time :D ), written in C
 ## Network Details
 Here is a quick overview of the network's structure and workings:
 | Property          | Description                   |
