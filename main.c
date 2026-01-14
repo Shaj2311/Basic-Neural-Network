@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #define EPOCHS 1000
+#define LEARNING_RATE 0.1
 #define NUM_INPUTS 4
 #define NUM_HIDDEN 4
 #define NUM_OUTPUTS 3
@@ -76,6 +77,7 @@ int main()
 	{
 		//forward pass
 		//hidden layer
+		double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
 		double HIDDEN_RESULT[NUM_HIDDEN]; //values computed by hidden layer neurons
 		//for each hidden neuron,
 		for(int i = 0; i < NUM_HIDDEN; i++)
@@ -95,6 +97,9 @@ int main()
 			//apply hidden neuron bias
 			result += HIDDEN_BIASES[i];
 
+			//store hidden neuron input
+			HIDDEN_INPUTS[i] = result;
+
 			//apply activation to introduce non-linearity
 			result = sigmoid(result);
 
@@ -103,6 +108,7 @@ int main()
 		}
 
 		//output layer
+		double OUTPUT_INPUTS[NUM_OUTPUTS];
 		double OUTPUT_RESULT[NUM_OUTPUTS];
 		//for each output neuron,
 		for(int i = 0; i < NUM_OUTPUTS; i++)
@@ -124,6 +130,9 @@ int main()
 			//apply output neuron bias
 			result += OUTPUT_BIASES[i];
 
+			//store output neuron input
+			OUTPUT_INPUTS[i] = result;
+
 			//apply activation to introduce non-linearity
 			result = sigmoid(result);
 
@@ -133,6 +142,7 @@ int main()
 
 		//loss calculation
 		double totalLoss;
+		double OUTPUT_LOSS[NUM_OUTPUTS];
 		//for each output neuron,
 		for(int i = 0; i < NUM_OUTPUTS; i++)
 		{
@@ -141,13 +151,55 @@ int main()
 				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
 				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]);
 
-			//accumulate loss
+			//store loss
+			OUTPUT_LOSS[i] = loss;
+
+			//accumulate total loss
 			totalLoss += loss;
 		}
 
 		//back propagation
-		//output layer
-		//hidden layer
+
+		//output error
+
+		//bias -= (learning rate)(change required)
+		double OUTPUT_ERRORS[NUM_OUTPUTS];
+		//for each output neuron,
+		for(int i = 0; i < NUM_OUTPUTS; i++)
+		{
+			//change required = partial d(loss)/d(input)
+			// =
+			//partial d(loss)/d(output) *
+			//partial d(output)/d(input)
+			// =
+			//(network output - expected output) *
+			// sigmoid_derivative(neuron input)
+			double error =
+				(OUTPUT_RESULT[i] - TRAINING_OUTPUTS[input][i]) *
+				dSigmoid(OUTPUT_INPUTS[i]);
+
+			//store error
+			OUTPUT_ERRORS[i] = error;
+		}
+
+		//hidden error
+		double HIDDEN_ERRORS[NUM_HIDDEN];
+		//for each hidden neuron,
+		for(int i = 0; i < NUM_HIDDEN; i++)
+		{
+			double error = 0.f;
+			//for each output neuron,
+			for(int j = 0; j < NUM_OUTPUTS; j++)
+			{
+				error += OUTPUT_ERRORS[j] * OUTPUT_WEIGHTS[i][j];
+			}
+			error *= dSigmoid(HIDDEN_INPUTS[i]);
+
+			//store error
+			HIDDEN_ERRORS[i] = error;
+		}
+
+		//apply correction
 	}
 	return 0;
 }
