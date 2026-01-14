@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #define EPOCHS 10000
-#define LEARNING_RATE 0.1
+#define LEARNING_RATE 0.2
 #define NUM_INPUTS 2
 #define NUM_HIDDEN 2
 #define NUM_OUTPUTS 1
@@ -73,10 +73,12 @@ int main()
 	for(int epoch = 0; epoch < EPOCHS; epoch++)
 	{
 		//for each input,
-		for(int input = 0; input < 4; input++)
+		for(int inputLoop = 0; inputLoop < 4; inputLoop++)
 		{
-			if(epoch % 1000 == 0)
-				printf("Input: %.0f %.0f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1]);
+			//training input set is chosen sequentially if it's the last epoch,
+			//otherwise chosen randomly
+			int input = (epoch == EPOCHS - 1 ? inputLoop : rand() % 4);
+
 			//forward pass
 			//hidden layer
 			double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
@@ -141,11 +143,6 @@ int main()
 				//store final result
 				OUTPUT_RESULT[i] = result;
 			}
-			if(epoch % 1000 == 0)
-			{
-				printf("Output: %.3f\n", OUTPUT_RESULT[0]);
-				printf("Expected: %.0f\n", TRAINING_OUTPUTS[input][0]);
-			}
 
 			//loss calculation
 			double totalLoss = 0.f;
@@ -164,8 +161,17 @@ int main()
 				//accumulate total loss
 				totalLoss += loss;
 			}
-			if(epoch % 1000 == 0)
-				printf("Epoch: %d\tTotal loss: %f\n\n", epoch, totalLoss);
+			if(epoch % 250 == 0)
+			{
+				system("cls");
+				printf("Training network...\n");
+				printf("Progress: %.2f%%\n", ((double)epoch / EPOCHS) * 100);
+				printf("Loss: %f\n", totalLoss);
+			}
+			if(epoch == EPOCHS - 1)
+			{
+				printf("%.0f XOR %.0f = %.2f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1], OUTPUT_RESULT[0]);
+			}
 
 			//back propagation
 
