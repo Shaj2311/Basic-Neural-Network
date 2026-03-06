@@ -1,5 +1,6 @@
 //basic neural network that predicts xor
 #include <stdio.h>
+#include <conio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
@@ -52,6 +53,7 @@ int main()
 		{0}
 	};
 
+retrain:
 	//initialize weights and biases
 	for(int i = 0; i < NUM_HIDDEN; i++)
 	{
@@ -69,6 +71,8 @@ int main()
 			OUTPUT_WEIGHTS[j][i] = getRand();
 		}
 	}
+
+	double totalLoss = 0.f;
 
 	//epoch loop
 	for(int epoch = 0; epoch < EPOCHS; epoch++)
@@ -146,7 +150,7 @@ int main()
 			}
 
 			//loss calculation
-			double totalLoss = 0.f;
+			totalLoss = 0.f;
 			double OUTPUT_LOSS[NUM_OUTPUTS];
 			//for each output neuron,
 			for(int i = 0; i < NUM_OUTPUTS; i++)
@@ -164,14 +168,10 @@ int main()
 			}
 			if(epoch % 250 == 0)
 			{
-				system("cls");
+				printf("\033[H\033[2J");
 				printf("Training network...\n");
 				printf("Progress: %.2f%%\n", ((double)epoch / EPOCHS) * 100);
 				printf("Loss: %f\n", totalLoss);
-			}
-			if(epoch == EPOCHS - 1)
-			{
-				printf("%.0f XOR %.0f = %.2f\n", TRAINING_INPUTS[input][0], TRAINING_INPUTS[input][1], OUTPUT_RESULT[0]);
 			}
 
 			//back propagation
@@ -242,5 +242,116 @@ int main()
 
 		}
 	}
+
+	//retrain network if needed
+	if(totalLoss >= 0.001)
+	{
+		printf("Network accuracy too low, press any key to retry\n");
+		_getch();
+		goto retrain;
+	}
+
+
+	printf("\nNetwork trained successfully\n");
+	printf("Test the network on 0 and 1 values\n");
+	printf("Input -1 to quit at any time\n\n");
+
+	//Testing network on user input
+	while(1)
+	{
+		//get user input
+		double TESTING_INPUTS[2];
+
+		printf("Enter input 1: ");
+		scanf_s("%lf", &TESTING_INPUTS[0]);
+
+		if(TESTING_INPUTS[0] == -1)
+			break;
+		if(TESTING_INPUTS[0] != 0 && TESTING_INPUTS[0] != 1)
+		{
+			printf("Invalid input, try again\n\n");
+			continue;
+		}
+
+		printf("Enter input 2: ");
+		scanf_s("%lf", &TESTING_INPUTS[1]);
+
+		if(TESTING_INPUTS[1] == -1)
+			break;
+		if(TESTING_INPUTS[1] != 0 && TESTING_INPUTS[1] != 1)
+		{
+			printf("Invalid input, try again\n");
+			continue;
+		}
+
+		//forward pass
+		//hidden layer
+		double HIDDEN_INPUTS[NUM_HIDDEN]; //values given to hidden layer
+		double HIDDEN_RESULT[NUM_HIDDEN]; //values computed by hidden layer neurons
+						  //for each hidden neuron,
+		for(int i = 0; i < NUM_HIDDEN; i++)
+		{
+			//for each input neuron,
+			double result = 0.f;
+			for(int j = 0; j < NUM_INPUTS; j++)
+			{
+				//get input
+				double inputValue = TESTING_INPUTS[j];
+				//apply weight
+				inputValue *= HIDDEN_WEIGHTS[j][i];
+				//add to result
+				result += inputValue;
+			}
+
+			//apply hidden neuron bias
+			result += HIDDEN_BIASES[i];
+
+			//store hidden neuron input
+			HIDDEN_INPUTS[i] = result;
+
+			//apply activation to introduce non-linearity
+			result = sigmoid(result);
+
+			//store final output
+			HIDDEN_RESULT[i] = result;
+		}
+
+		//output layer
+		double OUTPUT_INPUTS[NUM_OUTPUTS];
+		double OUTPUT_RESULT[NUM_OUTPUTS];
+		//for each output neuron,
+		for(int i = 0; i < NUM_OUTPUTS; i++)
+		{
+			double result = 0.f;
+			//for each hidden neuron,
+			for(int j = 0; j < NUM_HIDDEN; j++)
+			{
+				//get input (from hidden neuron)
+				double inputValue = HIDDEN_RESULT[j];
+
+				//apply weight
+				inputValue *= OUTPUT_WEIGHTS[j][i];
+
+				//add to result
+				result += inputValue;
+			}
+
+			//apply output neuron bias
+			result += OUTPUT_BIASES[i];
+
+			//store output neuron input
+			OUTPUT_INPUTS[i] = result;
+
+			//apply activation to introduce non-linearity
+			result = sigmoid(result);
+
+			//store final result
+			OUTPUT_RESULT[i] = result;
+		}
+
+		//print prediction
+		printf("Predicted output: %lf (%d)\n\n", OUTPUT_RESULT[0], OUTPUT_RESULT[0] < 0.5 ? 0 : 1);
+	}
+
 	return 0;
 }
